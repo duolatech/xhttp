@@ -64,6 +64,7 @@ func (h *HttpRequest) Get(url string) *HttpRequest {
 
 	h.Response = resp
 	h.Error = err
+
 	return h
 }
 
@@ -103,36 +104,56 @@ func (h *HttpRequest) Delete(url string, data map[string]string) *HttpRequest {
 //获取请求内容
 func (h *HttpRequest) GetContent() ([]byte, error) {
 
+	if h.Error != nil {
+		return nil, h.Error
+	}
 	respBody, err := ioutil.ReadAll(h.Response.Body)
 
 	return respBody, err
 }
 
 //获取响应header
-func (h *HttpRequest) GetHeader() (header http.Header) {
-	header = h.Response.Header
-	return
+func (h *HttpRequest) GetHeader() (http.Header, error) {
+
+	if h.Error != nil {
+		return nil, h.Error
+	}
+	return h.Response.Header, nil
 }
 
 //获取文档类型
-func (h *HttpRequest) GetContentType() (ctype string) {
-	ctype = h.Response.Header.Get("Content-Type")
-	return
+func (h *HttpRequest) GetContentType() (string, error) {
+
+	if h.Error != nil {
+		return "", h.Error
+	}
+	return h.Response.Header.Get("Content-Type"), nil
 }
 
 //获取响应cookie
-func (h *HttpRequest) GetCookies() []*http.Cookie {
-	return h.Response.Cookies()
+func (h *HttpRequest) GetCookies() ([]*http.Cookie, error) {
+
+	if h.Error != nil {
+		return nil, h.Error
+	}
+	return h.Response.Cookies(), nil
 }
 
 //获取响应状态码
-func (h *HttpRequest) GetStatudCode() int {
-	return h.Response.StatusCode
+func (h *HttpRequest) GetStatudCode() (int, error) {
+	if h.Error != nil {
+		return 0, h.Error
+	}
+	return h.Response.StatusCode, nil
 }
 
 //获取请求消耗时间
-func (h *HttpRequest) GetTime() time.Duration {
-	return h.Reqtime
+func (h *HttpRequest) GetTime() (time.Duration, error) {
+
+	if h.Error != nil {
+		return 0, h.Error
+	}
+	return h.Reqtime, nil
 }
 
 //设置连接超时
@@ -184,7 +205,6 @@ func (h *HttpRequest) HttpClient(method string, data map[string]string) (*http.R
 	if len(h.Referer) > 0 {
 		req.Header.Set("Referer", h.Referer)
 	}
-
 	//设置header
 	for headername, headervalue := range h.Header {
 		req.Header.Add(headername, headervalue)
